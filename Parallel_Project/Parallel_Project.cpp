@@ -75,7 +75,15 @@ int main(int argc, char** argv) {
 
         static int mat_result[50][50];
         MPI_Recv(mat_result, 50 * 50, MPI_INT, 4, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        cout << "Rank 4 (Matrix complete). Sample result[0][0] = " << mat_result[0][0] << endl;
+        cout << "Rank 4 (Matrix complete). The result: " << endl;
+        for(auto &i:mat_result)
+        {
+            for(auto &j:i){
+                cout<<j<<" ";
+            }
+            cout<<endl;
+        }
+        cout<<endl;
 
     }
     else if (rank == 1) {
@@ -152,6 +160,7 @@ int main(int argc, char** argv) {
         MPI_Recv(mat2, 50 * 50, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
         // Send 10 rows to each of the 5 workers (Ranks 5, 6, 7, 8, 9)
+#pragma omp parallel for
         for (int dest = 5; dest <= 9; dest++) {
             int start_row = (dest - 5) * 10;
             MPI_Send(&mat1[start_row][0], 10 * 50, MPI_INT, dest, 0, MPI_COMM_WORLD);
@@ -159,6 +168,7 @@ int main(int argc, char** argv) {
         }
 
         // Receive 10 rows back from each worker
+#pragma omp parallel for
         for (int source = 5; source <= 9; source++) {
             int start_row = (source - 5) * 10;
             MPI_Recv(&result[start_row][0], 10 * 50, MPI_INT, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -175,6 +185,7 @@ int main(int argc, char** argv) {
         MPI_Recv(mat1_part, 10 * 50, MPI_INT, 4, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         MPI_Recv(mat2_part, 10 * 50, MPI_INT, 4, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
+#pragma omp parallel for
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 50; j++) {
                 result_part[i][j] = mat1_part[i][j] + mat2_part[i][j];
